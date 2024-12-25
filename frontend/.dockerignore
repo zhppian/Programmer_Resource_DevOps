@@ -1,2 +1,50 @@
-node_modules
-build
+# Python cache files
+__pycache__/
+*.pyc
+*.pyo
+
+# Node.js dependencies
+node_modules/
+npm-debug.log*
+
+# Build outputs
+frontend/build/
+dist/
+build/
+.cache/
+
+# Environment and config files
+.env
+.env.local
+.env.production
+.env.test
+
+# System files
+.DS_Store
+*.swp
+*.swo
+
+# IDE and editor files
+.vscode/
+.idea/
+
+# Test coverage
+coverage/
+*.cover
+
+# Logs and reports
+*.log
+*.pid
+*.seed
+*.gz
+
+# Temporary files
+tmp/
+*.tmp
+
+# Git and version control
+.git/
+.gitignore
+
+# Docker-specific
+docker-compose.override.yml

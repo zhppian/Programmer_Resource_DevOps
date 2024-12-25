@@ -4,9 +4,11 @@ function App() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    fetch("/api/hello")
+    const backendUrl = process.env.REACT_APP_BACKEND_URL || ""; // Use environment variable
+    fetch(`${backendUrl}/api/hello`)
       .then((response) => response.json())
-      .then((data) => setMessage(data.message));
+      .then((data) => setMessage(data.message))
+      .catch((error) => console.error("Error fetching the API:", error));
   }, []);
 
   return (
