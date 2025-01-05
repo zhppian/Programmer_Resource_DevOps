@@ -11,7 +11,6 @@ on:
 jobs:
   destroy:
     runs-on: ubuntu-latest
-    #terraformを管理しているディレクトリに移動
     defaults:
       run:
         working-directory: terraform-ecs
@@ -25,13 +24,21 @@ jobs:
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
-          terraform_version: 1.6.3 # 或者你的版本
+          terraform_version: 1.6.3
 
       # Initialize Terraform
       - name: Terraform Init
         run: terraform init
 
-      # Plan the destruction (optional but recommended)
+      # Select the correct Terraform workspace
+      - name: Select Terraform Workspace
+        run: terraform workspace select ${{ github.event.inputs.workspace || 'default' }}
+
+      # Refresh Terraform state
+      - name: Terraform Refresh
+        run: terraform refresh
+
+      # Plan the destruction (optional)
       - name: Terraform Plan Destroy
         run: terraform plan -destroy
 
