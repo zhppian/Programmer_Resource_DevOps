@@ -9,8 +9,8 @@ data "aws_iam_role" "ecs_task_execution_role" {
   name = "ecs-task-execution-role"
 }
 
-resource "aws_iam_role_policy_attachment" "ecs_task_execution_policy" {
-  role       = aws_iam_role.ecs_task_execution_role.name
+resource "data.aws_iam_role_policy_attachment" "ecs_task_execution_policy" {
+  role       = data.aws_iam_role.ecs_task_execution_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
@@ -49,7 +49,7 @@ resource "aws_ecs_task_definition" "program_resource" {
   requires_compatibilities = ["FARGATE"]
   cpu                      = "512"
   memory                   = "1024"
-  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn  # 添加执行角色
+  execution_role_arn       = data.aws_iam_role.ecs_task_execution_role.arn  # 添加执行角色
 }
 
 data "aws_vpc" "default" {
