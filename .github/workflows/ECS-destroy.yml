@@ -34,10 +34,6 @@ jobs:
       - name: Select Terraform Workspace
         run: terraform workspace select ${{ github.event.inputs.workspace || 'default' }}
 
-      # Refresh Terraform state
-      - name: Terraform Refresh
-        run: terraform refresh
-
       # Plan the destruction (optional)
       - name: Terraform Plan Destroy
         run: terraform plan -destroy
