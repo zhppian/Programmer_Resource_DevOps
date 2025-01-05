@@ -2,34 +2,11 @@ provider "aws" {
   region = "ap-northeast-3"
 }
 
-# 创建 ECS 集群
-resource "aws_ecs_cluster" "main" {
-  name = "program-resource-tf"
-}
-
-# 创建 IAM 角色
-resource "aws_iam_role" "ecs_task_execution_role" {
+# 使用现有的 IAM 角色
+data "aws_iam_role" "ecs_task_execution_role" {
   name = "ecs-task-execution-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "ecs-tasks.amazonaws.com"
-        }
-      }
-    ]
-  })
 }
 
-# 为 ECS 任务角色附加权限
-resource "aws_iam_role_policy_attachment" "ecs_task_execution_policy" {
-  role       = aws_iam_role.ecs_task_execution_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
-}
 
 # ECS 任务定义
 resource "aws_ecs_task_definition" "program_resource" {
@@ -38,7 +15,7 @@ resource "aws_ecs_task_definition" "program_resource" {
   requires_compatibilities = ["FARGATE"]
   cpu                   = "512"
   memory                = "1024"
-  execution_role_arn    = aws_iam_role.ecs_task_execution_role.arn
+  execution_role_arn    = data.aws_iam_role.ecs_task_execution_role.arn  # 引用现有角色
 
   container_definitions = jsonencode([
     {
@@ -69,6 +46,9 @@ resource "aws_ecs_task_definition" "program_resource" {
     }
   ])
 }
+
+# 其他资源定义保持不变
+
 
 # 获取默认VPC
 data "aws_vpc" "default" {
