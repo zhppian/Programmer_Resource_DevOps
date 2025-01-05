@@ -84,10 +84,10 @@ data "aws_subnets" "default" {
 }
 
 resource "aws_ecs_service" "main" {
-  name            = "program-resource-frontend-tf"
+  name            = "program-resource-tf"
   cluster         = aws_ecs_cluster.main.id
   task_definition = aws_ecs_task_definition.program_resource.arn
-  desired_count   = 0
+  desired_count   = 1
   launch_type     = "FARGATE"
 
 

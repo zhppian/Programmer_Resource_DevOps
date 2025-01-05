@@ -1,37 +1,39 @@
-name: deploy
+name: Terraform Destroy
 
 on:
-  push:
-    branches:
-      - main
-
-env:
-  AWS_REGION: ap-northeast-3
-  #imageのタグをgithubのshaにすることで、常に最新のimageをデプロイする
-  IMAGE_VERSION: latest
+  workflow_dispatch:
+    inputs:
+      workspace:
+        description: 'Terraform workspace to destroy'
+        required: false
+        default: 'default'
 
 jobs:
-  terraform:
-    name: Depploy to AWS ECS
+  destroy:
     runs-on: ubuntu-latest
 
-    #terraformを管理しているディレクトリに移動
-    defaults:
-      run:
-        working-directory: terraform-ecs
-
     steps:
-    - uses: actions/checkout@v2
+      # Checkout the repository
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-    #terraformのバージョンを指定
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v1
-      with:
-        terraform_version: 1.6.3
+      # Install Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.0 # 或者你的版本
 
-    #terraform destroyを実行
-    - name: Terraform destroy
-      run: terraform destroy
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      # Initialize Terraform
+      - name: Terraform Init
+        run: terraform init
+
+      # Plan the destruction (optional but recommended)
+      - name: Terraform Plan Destroy
+        run: terraform plan -destroy
+
+      # Destroy the resources
+      - name: Terraform Destroy
+        env:
+          TF_VAR_AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          TF_VAR_AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: terraform destroy -auto-approve
