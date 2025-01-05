@@ -2,17 +2,26 @@ provider "aws" {
   region = "ap-northeast-3"
 }
 
-data "aws_ecs_cluster" "main" {
+# 创建 ECS 集群
+resource "aws_ecs_cluster" "main" {
   name = "program-resource-tf"
 }
+
+# 创建 IAM 角色
 data "aws_iam_role" "ecs_task_execution_role" {
   name = "ecs-task-execution-role"
 }
 
+# ECS 任务定义
 resource "aws_ecs_task_definition" "program_resource" {
-  family = "program-resource-tf"
-  network_mode             = "awsvpc"
-  container_definitions    = jsonencode([
+  family                = "program-resource-tf"
+  network_mode          = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                   = "512"
+  memory                = "1024"
+  execution_role_arn    = aws_iam_role.ecs_task_execution_role.arn
+
+  container_definitions = jsonencode([
     {
       name      = "frontend-container"
       image     = "886436941040.dkr.ecr.ap-northeast-3.amazonaws.com/program_resource_frontend:latest"
@@ -40,17 +49,14 @@ resource "aws_ecs_task_definition" "program_resource" {
       ]
     }
   ])
-
-  requires_compatibilities = ["FARGATE"]
-  cpu                      = "512"
-  memory                   = "1024"
-  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn  # 添加执行角色
 }
 
+# 获取默认VPC
 data "aws_vpc" "default" {
   default = true
 }
 
+# 创建安全组
 resource "aws_security_group" "http" {
   name_prefix = "http-"
   description = "Allow HTTP traffic"
@@ -76,6 +82,7 @@ resource "aws_security_group" "http" {
   }
 }
 
+# 获取默认子网
 data "aws_subnets" "default" {
   filter {
     name   = "vpc-id"
@@ -83,6 +90,7 @@ data "aws_subnets" "default" {
   }
 }
 
+# 创建 ECS 服务
 resource "aws_ecs_service" "main" {
   name            = "program-resource-frontend-tf"
   cluster         = aws_ecs_cluster.main.id
@@ -90,11 +98,12 @@ resource "aws_ecs_service" "main" {
   desired_count   = 1
   launch_type     = "FARGATE"
 
-
   network_configuration {
     subnets          = data.aws_subnets.default.ids
     security_groups  = [aws_security_group.http.id]
     assign_public_ip = true
   }
-}
 
+  # 强制重新部署，使用新的任务定义
+  force_new_deployment = true
+}
