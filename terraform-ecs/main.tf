@@ -9,11 +9,6 @@ data "aws_iam_role" "ecs_task_execution_role" {
   name = "ecs-task-execution-role"
 }
 
-resource "data.aws_iam_role_policy_attachment" "ecs_task_execution_policy" {
-  role       = data.aws_iam_role.ecs_task_execution_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
-}
-
 resource "aws_ecs_task_definition" "program_resource" {
   family = "program-resource-tf"
   network_mode             = "awsvpc"
