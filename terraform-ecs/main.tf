@@ -103,6 +103,12 @@ resource "aws_ecs_service" "main" {
     security_groups  = [aws_security_group.http.id]
     assign_public_ip = true
   }
+    # 如果服务已存在，忽略重复创建的错误
+  lifecycle {
+    ignore_changes = [
+      task_definition, # 避免与现有服务定义冲突
+    ]
+  }
 
   # 强制重新部署，使用新的任务定义
   force_new_deployment = true
