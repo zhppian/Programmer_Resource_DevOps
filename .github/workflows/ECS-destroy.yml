@@ -11,6 +11,10 @@ on:
 jobs:
   destroy:
     runs-on: ubuntu-latest
+    #terraformを管理しているディレクトリに移動
+    defaults:
+      run:
+        working-directory: terraform-ecs
 
     steps:
       # Checkout the repository
