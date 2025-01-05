@@ -2,11 +2,15 @@ provider "aws" {
   region = "ap-northeast-3"
 }
 
+# 创建 ECS 集群
+resource "aws_ecs_cluster" "main" {
+  name = "program-resource-tf"
+}
+
 # 使用现有的 IAM 角色
 data "aws_iam_role" "ecs_task_execution_role" {
   name = "ecs-task-execution-role"
 }
-
 
 # ECS 任务定义
 resource "aws_ecs_task_definition" "program_resource" {
@@ -15,7 +19,7 @@ resource "aws_ecs_task_definition" "program_resource" {
   requires_compatibilities = ["FARGATE"]
   cpu                   = "512"
   memory                = "1024"
-  execution_role_arn    = data.aws_iam_role.ecs_task_execution_role.arn  # 引用现有角色
+  execution_role_arn    = aws_iam_role.ecs_task_execution_role.arn
 
   container_definitions = jsonencode([
     {
@@ -46,9 +50,6 @@ resource "aws_ecs_task_definition" "program_resource" {
     }
   ])
 }
-
-# 其他资源定义保持不变
-
 
 # 获取默认VPC
 data "aws_vpc" "default" {
