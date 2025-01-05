@@ -1,0 +1,45 @@
+name: deploy
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AWS_REGION: ap-northeast-3
+  #imageのタグをgithubのshaにすることで、常に最新のimageをデプロイする
+  IMAGE_VERSION: latest
+
+jobs:
+  terraform:
+    name: Depploy to AWS ECS
+    runs-on: ubuntu-latest
+
+    #terraformを管理しているディレクトリに移動
+    defaults:
+      run:
+        working-directory: terraform-ecs
+
+    steps:
+    - uses: actions/checkout@v2
+
+    #terraformのバージョンを指定
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: 1.6.3
+
+    #terraform initを実行
+    - name: Terraform Init
+      run: terraform init
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+    #terraform applyを実行
+    #引数にimage_versionを渡す
+    - name: Terraform Apply
+      run: terraform apply -var "image_version=${{ env.IMAGE_VERSION }}" -auto-approve
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
