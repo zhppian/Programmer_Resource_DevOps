@@ -2,29 +2,29 @@ provider "aws" {
   region = "ap-northeast-3"
 }
 
-# 创建 ECS 集群
+# 定义 ECS Cluster
 resource "aws_ecs_cluster" "main" {
   name = "program-resource-tf"
 }
 
-# 使用现有的 IAM 角色
+# 使用既存 IAM Role
 data "aws_iam_role" "ecs_task_execution_role" {
   name = "ecs-task-execution-role"
 }
 
-# ECS 任务定义
+# 定义 ECS Task Definition
 resource "aws_ecs_task_definition" "program_resource" {
-  family                = "program-resource-tf"
-  network_mode          = "awsvpc"
+  family                   = "program-resource-tf"
+  network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
-  cpu                   = "512"
-  memory                = "1024"
-  execution_role_arn    = data.aws_iam_role.ecs_task_execution_role.arn
+  cpu                      = "512"
+  memory                   = "1024"
+  execution_role_arn       = data.aws_iam_role.ecs_task_execution_role.arn
 
   container_definitions = jsonencode([
     {
       name      = "frontend-container"
-      image     = "886436941040.dkr.ecr.ap-northeast-3.amazonaws.com/program_resource_frontend:latest"
+      image     = "886436941040.dkr.ecr.ap-northeast-3.amazonaws.com/program_resource_frontend:latest" # 确保镜像最新
       cpu       = 256
       memory    = 512
       essential = true
@@ -37,7 +37,7 @@ resource "aws_ecs_task_definition" "program_resource" {
     },
     {
       name      = "backend-container"
-      image     = "886436941040.dkr.ecr.ap-northeast-3.amazonaws.com/program_resource_backend:latest"
+      image     = "886436941040.dkr.ecr.ap-northeast-3.amazonaws.com/program_resource_backend:latest" # 确保镜像最新
       cpu       = 256
       memory    = 512
       essential = true
@@ -51,12 +51,19 @@ resource "aws_ecs_task_definition" "program_resource" {
   ])
 }
 
-# 获取默认VPC
+# 加载默认 VPC 和子网
 data "aws_vpc" "default" {
   default = true
 }
 
-# 创建安全组
+data "aws_subnets" "default" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.default.id]
+  }
+}
+
+# 定义安全组
 resource "aws_security_group" "http" {
   name_prefix = "http-"
   description = "Allow HTTP traffic"
@@ -68,12 +75,14 @@ resource "aws_security_group" "http" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
   ingress {
     from_port   = 5001
     to_port     = 5001
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -82,15 +91,7 @@ resource "aws_security_group" "http" {
   }
 }
 
-# 获取默认子网
-data "aws_subnets" "default" {
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.default.id]
-  }
-}
-
-# 创建 ECS 服务
+# 定义 ECS 服务
 resource "aws_ecs_service" "main" {
   name            = "program-resource-frontend-tf"
   cluster         = aws_ecs_cluster.main.id
@@ -103,13 +104,14 @@ resource "aws_ecs_service" "main" {
     security_groups  = [aws_security_group.http.id]
     assign_public_ip = true
   }
-    # 如果服务已存在，忽略重复创建的错误
+
+  # 防止不必要的销毁和重建
   lifecycle {
     ignore_changes = [
-      task_definition, # 避免与现有服务定义冲突
+      desired_count, # 忽略实例数量的变化
     ]
   }
 
-  # 强制重新部署，使用新的任务定义
-  force_new_deployment = true
+  deployment_minimum_healthy_percent = 50
+  deployment_maximum_percent         = 200
 }
