@@ -65,7 +65,7 @@ data "aws_vpc" "default" {
 data "aws_security_group" "http" {
   filter {
     name   = "group-name"
-    values = ["your-security-group-name"] # 替换为手动创建的安全组名称
+    values = "http-20250105102830995900000001" # 替换为手动创建的安全组名称
   }
 }
 
