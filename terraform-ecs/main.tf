@@ -14,12 +14,13 @@ provider "aws" {
 resource "aws_ecs_cluster" "main" {
   name = "program-resource-tf"
 }
+
 data "aws_iam_role" "ecs_task_execution_role" {
   name = "ecs-task-execution-role"
 }
 
 resource "aws_ecs_task_definition" "program_resource" {
-  family = "program-resource-tf"
+  family                   = "program-resource-tf"
   network_mode             = "awsvpc"
   container_definitions    = jsonencode([
     {
@@ -53,35 +54,18 @@ resource "aws_ecs_task_definition" "program_resource" {
   requires_compatibilities = ["FARGATE"]
   cpu                      = "512"
   memory                   = "1024"
-  execution_role_arn       = data.aws_iam_role.ecs_task_execution_role.arn  # 添加执行角色
+  execution_role_arn       = data.aws_iam_role.ecs_task_execution_role.arn
 }
 
 data "aws_vpc" "default" {
   default = true
 }
 
-resource "aws_security_group" "http" {
-  name_prefix = "http-"
-  description = "Allow HTTP traffic"
-  vpc_id      = data.aws_vpc.default.id
-
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  ingress {
-    from_port   = 5001
-    to_port     = 5001
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+# 使用现有手动创建的安全组
+data "aws_security_group" "http" {
+  filter {
+    name   = "group-name"
+    values = ["your-security-group-name"] # 替换为手动创建的安全组名称
   }
 }
 
@@ -99,11 +83,9 @@ resource "aws_ecs_service" "main" {
   desired_count   = 1
   launch_type     = "FARGATE"
 
-
   network_configuration {
     subnets          = data.aws_subnets.default.ids
-    security_groups  = [aws_security_group.http.id]
+    security_groups  = [data.aws_security_group.http.id]
     assign_public_ip = true
   }
 }
-
