@@ -1,3 +1,12 @@
+terraform {
+  backend "s3" {
+    bucket         = "terraform-state-program-resource"
+    key            = "test/state"  # path to store the state file
+    region         = "ap-northeast-3"
+    encrypt        = true
+  }
+}
+
 provider "aws" {
   region = "ap-northeast-3"
 }
