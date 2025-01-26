@@ -93,8 +93,8 @@ resource "aws_lb" "main" {
 # 创建 ALB 的目标组 (Frontend)
 resource "aws_lb_target_group" "frontend_tg" {
   name        = "frontend-target-group"  # 目标组名称
-  port        = 443  # 更改为 HTTPS 443
-  protocol    = "HTTPS"  # 使用 HTTPS 协议
+  port        = 80  # 更改为 HTTPS 443
+  protocol    = "HTTP"  # 使用 HTTPS 协议
   vpc_id      = data.aws_vpc.default.id  # 目标组所属的 VPC ID
   target_type = "ip"  # 目标类型为 IP
 }
@@ -102,8 +102,8 @@ resource "aws_lb_target_group" "frontend_tg" {
 # 创建 ALB 的目标组 (Backend)
 resource "aws_lb_target_group" "backend_tg" {
   name        = "backend-target-group"  # 目标组名称
-  port        = 442  # 更改为 HTTPS 442
-  protocol    = "HTTPS"  # 使用 HTTPS 协议
+  port        = 5001  # 更改为 HTTPS 442
+  protocol    = "HTTP"  # 使用 HTTPS 协议
   vpc_id      = data.aws_vpc.default.id  # 目标组所属的 VPC ID
   target_type = "ip"  # 目标类型为 IP
 }
