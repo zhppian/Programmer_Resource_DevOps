@@ -147,7 +147,7 @@ resource "aws_lb_listener" "frontend_https_listener" {
 }
 
 # 创建 Listener (Frontend)
-resource "aws_lb_listener" "http_redirect" {
+resource "aws_lb_listener" "frontend_listener" {
   load_balancer_arn = aws_lb.main.arn  # 关联的 ALB ARN
   port              = 80  # HTTP 80 端口
   protocol          = "HTTP"  # 协议为 HTTP
