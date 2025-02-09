@@ -92,6 +92,14 @@ resource "aws_lb_target_group" "frontend_tg" {
   protocol    = "HTTP"
   vpc_id      = data.aws_vpc.default.id
   target_type = "ip" # ECS 使用 IP 模式
+
+  health_check {
+    path                = "/"
+    port                = 80
+    healthy_threshold   = 2
+    unhealthy_threshold = 10
+  }
+
 }
 
 # 创建 ALB 的目标组 (Backend)
@@ -101,6 +109,13 @@ resource "aws_lb_target_group" "backend_tg" {
   protocol    = "HTTP"
   vpc_id      = data.aws_vpc.default.id
   target_type = "ip" # ECS 使用 IP 模式
+
+  health_check {
+    path                = "/"
+    port                = 5001
+    healthy_threshold   = 2
+    unhealthy_threshold = 10
+  }  
 }
 
 
