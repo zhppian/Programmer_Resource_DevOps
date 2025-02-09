@@ -156,37 +156,39 @@ resource "aws_lb_listener" "http_redirect" {
   }
 }
 
--- resource "aws_lb_listener_rule" "backend_path_rule" {
---   listener_arn = aws_lb_listener.frontend_https_listener.arn
---   priority     = 10
+/*
+resource "aws_lb_listener_rule" "backend_path_rule" {
+  listener_arn = aws_lb_listener.frontend_https_listener.arn
+  priority     = 10
 
---   condition {
---     path_pattern {
---       values = ["/api/*"]
---     }
---   }
+  condition {
+    path_pattern {
+      values = ["/api/*"]
+    }
+  }
 
---   action {
---     type             = "forward"
---     target_group_arn = aws_lb_target_group.backend_tg.arn
---   }
--- }
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.backend_tg.arn
+  }
+}
 
--- resource "aws_lb_listener_rule" "frontend_path_rule" {
---   listener_arn = aws_lb_listener.frontend_https_listener.arn
---   priority     = 20
+resource "aws_lb_listener_rule" "frontend_path_rule" {
+  listener_arn = aws_lb_listener.frontend_https_listener.arn
+  priority     = 20
 
---   condition {
---     path_pattern {
---       values = ["/*"]
---     }
---   }
+  condition {
+    path_pattern {
+      values = ["/*"]
+    }
+  }
 
---   action {
---     type             = "forward"
---     target_group_arn = aws_lb_target_group.frontend_tg.arn
---   }
--- }
+  action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.frontend_tg.arn
+  }
+}
+*/
 
 ### Load Balancer 配置结束 ###
 
