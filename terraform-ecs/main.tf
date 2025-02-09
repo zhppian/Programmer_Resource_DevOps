@@ -103,17 +103,7 @@ resource "aws_lb_target_group" "backend_tg" {
   target_type = "ip" # ECS 使用 IP 模式
 }
 
-# 创建 Listener (Frontend)
-resource "aws_lb_listener" "frontend_listener" {
-  load_balancer_arn = aws_lb.main.arn
-  port              = 80
-  protocol          = "HTTP"
-  # 当流量到达 frontend_listener 的 80 端口时，ALB 将其转发到 frontend-target-group 中注册的目标
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.frontend_tg.arn
-  }
-}
+
 
 # 创建 Listener (Backend)
 resource "aws_lb_listener" "backend_listener" {
