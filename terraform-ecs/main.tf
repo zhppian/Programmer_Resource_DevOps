@@ -35,6 +35,16 @@ resource "aws_ecs_task_definition" "program_resource" {
           hostPort      = 80
         }
       ]
+      environment = [
+        {
+          name  = "VITE_API_BASE_URL"
+          value = "http://${aws_lb.main.dns_name}:5001"
+        },
+        {
+          name  = "VITE_API_SECOND_URL"
+          value = "http://${aws_lb.main.dns_name}:5002"
+        }
+      ]
     },
     {
       name      = "backend-container"
@@ -46,6 +56,10 @@ resource "aws_ecs_task_definition" "program_resource" {
         {
           containerPort = 5001
           hostPort      = 5001
+        },
+        {
+          containerPort = 5002
+          hostPort      = 5002
         }
       ]
     }
@@ -118,6 +132,22 @@ resource "aws_lb_target_group" "backend_tg" {
   }  
 }
 
+resource "aws_lb_target_group" "backend_tg_5002" {
+  name        = "backend-target-group-5002"
+  port        = 5002
+  protocol    = "HTTP"
+  vpc_id      = data.aws_vpc.default.id
+  target_type = "ip" 
+
+  health_check {
+    path                = "/"
+    port                = 5002
+    healthy_threshold   = 2
+    unhealthy_threshold = 10
+  }
+}
+
+
 
 
 # 创建 Listener (Backend)
@@ -131,6 +161,18 @@ resource "aws_lb_listener" "backend_listener" {
     target_group_arn = aws_lb_target_group.backend_tg.arn
   }
 }
+
+resource "aws_lb_listener" "backend_listener_5002" {
+  load_balancer_arn = aws_lb.main.arn
+  port              = 5002
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.backend_tg_5002.arn
+  }
+}
+
 
 # 创建 HTTPS Listener (Frontend)
 resource "aws_lb_listener" "frontend_https_listener" {
@@ -160,40 +202,6 @@ resource "aws_lb_listener" "frontend_listener" {
     }
   }
 }
-
-/*
-resource "aws_lb_listener_rule" "backend_path_rule" {
-  listener_arn = aws_lb_listener.frontend_https_listener.arn
-  priority     = 10
-
-  condition {
-    path_pattern {
-      values = ["/api/*"]
-    }
-  }
-
-  action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.backend_tg.arn
-  }
-}
-
-resource "aws_lb_listener_rule" "frontend_path_rule" {
-  listener_arn = aws_lb_listener.frontend_https_listener.arn
-  priority     = 20
-
-  condition {
-    path_pattern {
-      values = ["/*"]
-    }
-  }
-
-  action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.frontend_tg.arn
-  }
-}
-*/
 
 ### Load Balancer 配置结束 ###
 
@@ -242,9 +250,18 @@ resource "aws_ecs_service" "main" {
     container_name   = "backend-container"
     container_port   = 5001
   }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.backend_tg_5002.arn
+    container_name   = "backend-container"
+    container_port   = 5002
+  }
+
   # 确保 ALB 和目标组的 Listener 在 ECS 服务之前创建
   depends_on = [
     aws_lb_listener.frontend_listener,
-    aws_lb_listener.backend_listener
+    aws_lb_listener.backend_listener,
+    aws_lb_listener.backend_listener_5002
   ]
+
 }
