@@ -81,7 +81,7 @@ resource "aws_ecs_task_definition" "program_resource" {
 
   requires_compatibilities = ["FARGATE"]
   cpu                      = "1024"
-  memory                   = "2048"
+  memory                   = "3072"
   execution_role_arn       = data.aws_iam_role.ecs_task_execution_role.arn
 }
 
