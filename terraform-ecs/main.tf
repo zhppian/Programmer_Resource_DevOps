@@ -219,34 +219,34 @@ resource "aws_lb_listener" "frontend_https_listener" {
 
 }
 
-# 创建 HTTPS Listener (Backend)
-resource "aws_lb_listener" "backend_https_listener" {
-  load_balancer_arn = aws_lb.main.arn
-  port              = 5001
-  protocol          = "HTTPS"
-  ssl_policy        = "ELBSecurityPolicy-2016-08"  # 可根据需要选择 SSL 策略
-  certificate_arn   = "arn:aws:acm:ap-northeast-3:886436941040:certificate/03ea08ec-55cb-49f2-81f9-5105b1b75420" # 替换为实际 ACM 证书 ARN
+# # 创建 HTTPS Listener (Backend)
+# resource "aws_lb_listener" "backend_https_listener" {
+#   load_balancer_arn = aws_lb.main.arn
+#   port              = 5001
+#   protocol          = "HTTPS"
+#   ssl_policy        = "ELBSecurityPolicy-2016-08"  # 可根据需要选择 SSL 策略
+#   certificate_arn   = "arn:aws:acm:ap-northeast-3:886436941040:certificate/03ea08ec-55cb-49f2-81f9-5105b1b75420" # 替换为实际 ACM 证书 ARN
 
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.backend_tg.arn
-  }
+#   default_action {
+#     type             = "forward"
+#     target_group_arn = aws_lb_target_group.backend_tg.arn
+#   }
 
-}
+# }
 
-resource "aws_lb_listener" "backend_5002_https_listener" {
-  load_balancer_arn = aws_lb.main.arn
-  port              = 5002
-  protocol          = "HTTPS"
-  ssl_policy        = "ELBSecurityPolicy-2016-08"  # 可根据需要选择 SSL 策略
-  certificate_arn   = "arn:aws:acm:ap-northeast-3:886436941040:certificate/03ea08ec-55cb-49f2-81f9-5105b1b75420" # 替换为实际 ACM 证书 ARN
+# resource "aws_lb_listener" "backend_5002_https_listener" {
+#   load_balancer_arn = aws_lb.main.arn
+#   port              = 5002
+#   protocol          = "HTTPS"
+#   ssl_policy        = "ELBSecurityPolicy-2016-08"  # 可根据需要选择 SSL 策略
+#   certificate_arn   = "arn:aws:acm:ap-northeast-3:886436941040:certificate/03ea08ec-55cb-49f2-81f9-5105b1b75420" # 替换为实际 ACM 证书 ARN
 
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.backend_tg_5002.arn
-  }
+#   default_action {
+#     type             = "forward"
+#     target_group_arn = aws_lb_target_group.backend_tg_5002.arn
+#   }
 
-}
+# }
 
 # 创建 Listener (Frontend)
 resource "aws_lb_listener" "frontend_listener" {
