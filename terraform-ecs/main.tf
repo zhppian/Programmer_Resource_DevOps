@@ -319,7 +319,7 @@ resource "aws_ecs_service" "main" {
 
   load_balancer {
     target_group_arn = aws_lb_target_group.backend_tg_5002.arn
-    container_name   = "backend-container"
+    container_name   = "backend-container-5002"
     container_port   = 5002
   }
 
