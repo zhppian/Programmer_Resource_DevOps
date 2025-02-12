@@ -7,6 +7,10 @@ terraform {
   }
 }
 
+variable "domain_name" {
+  default = "programresourcehub.com"
+}
+
 provider "aws" {
   region = "ap-northeast-3"
 }
@@ -39,6 +43,7 @@ resource "aws_ecs_task_definition" "program_resource" {
         {
           name  = "VITE_API_BASE_URL"
           value = "http://${aws_lb.main.dns_name}:5001"
+          # value = "https://domain:5001"
         },
         {
           name  = "VITE_API_SECOND_URL"
@@ -56,7 +61,16 @@ resource "aws_ecs_task_definition" "program_resource" {
         {
           containerPort = 5001
           hostPort      = 5001
-        },
+        }
+      ]
+    },
+    {
+      name      = "backend-container-5002"
+      image     = "886436941040.dkr.ecr.ap-northeast-3.amazonaws.com/program_resource_backend_5002:latest"
+      cpu       = 256
+      memory    = 512
+      essential = true
+      portMappings = [
         {
           containerPort = 5002
           hostPort      = 5002
@@ -108,10 +122,12 @@ resource "aws_lb_target_group" "frontend_tg" {
   target_type = "ip" # ECS 使用 IP 模式
 
   health_check {
-    path                = "/"
-    port                = 80
-    healthy_threshold   = 2
-    unhealthy_threshold = 10
+    path                = "/health" # Update this to a valid route
+    interval            = 30
+    timeout             = 5
+    healthy_threshold   = 5
+    unhealthy_threshold = 2
+    matcher             = "200-299"
   }
 
 }
@@ -125,11 +141,13 @@ resource "aws_lb_target_group" "backend_tg" {
   target_type = "ip" # ECS 使用 IP 模式
 
   health_check {
-    path                = "/"
-    port                = 5001
-    healthy_threshold   = 2
-    unhealthy_threshold = 10
-  }  
+    path                = "/health" # Update this to a valid route
+    interval            = 30
+    timeout             = 5
+    healthy_threshold   = 5
+    unhealthy_threshold = 2
+    matcher             = "200-299"
+  }
 }
 
 resource "aws_lb_target_group" "backend_tg_5002" {
@@ -140,10 +158,12 @@ resource "aws_lb_target_group" "backend_tg_5002" {
   target_type = "ip" 
 
   health_check {
-    path                = "/"
-    port                = 5002
-    healthy_threshold   = 2
-    unhealthy_threshold = 10
+    path                = "/health" # Update this to a valid route
+    interval            = 30
+    timeout             = 5
+    healthy_threshold   = 5
+    unhealthy_threshold = 2
+    matcher             = "200-299"
   }
 }
 
@@ -160,6 +180,11 @@ resource "aws_lb_listener" "backend_listener" {
     type             = "forward"
     target_group_arn = aws_lb_target_group.backend_tg.arn
   }
+
+  depends_on = [ 
+    aws_lb.main,
+    aws_lb_target_group.backend_tg
+  ]    
 }
 
 resource "aws_lb_listener" "backend_listener_5002" {
@@ -171,6 +196,11 @@ resource "aws_lb_listener" "backend_listener_5002" {
     type             = "forward"
     target_group_arn = aws_lb_target_group.backend_tg_5002.arn
   }
+
+  depends_on = [ 
+    aws_lb.main,
+    aws_lb_target_group.backend_tg_5002
+  ]  
 }
 
 
@@ -186,6 +216,36 @@ resource "aws_lb_listener" "frontend_https_listener" {
     type             = "forward"
     target_group_arn = aws_lb_target_group.frontend_tg.arn
   }
+
+}
+
+# 创建 HTTPS Listener (Backend)
+resource "aws_lb_listener" "backend_https_listener" {
+  load_balancer_arn = aws_lb.main.arn
+  port              = 5001
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"  # 可根据需要选择 SSL 策略
+  certificate_arn   = "arn:aws:acm:ap-northeast-3:886436941040:certificate/03ea08ec-55cb-49f2-81f9-5105b1b75420" # 替换为实际 ACM 证书 ARN
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.backend_tg.arn
+  }
+
+}
+
+resource "aws_lb_listener" "backend_5002_https_listener" {
+  load_balancer_arn = aws_lb.main.arn
+  port              = 5002
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"  # 可根据需要选择 SSL 策略
+  certificate_arn   = "arn:aws:acm:ap-northeast-3:886436941040:certificate/03ea08ec-55cb-49f2-81f9-5105b1b75420" # 替换为实际 ACM 证书 ARN
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.backend_tg_5002.arn
+  }
+
 }
 
 # 创建 Listener (Frontend)
@@ -201,6 +261,12 @@ resource "aws_lb_listener" "frontend_listener" {
       status_code = "HTTP_301"  # 重定向状态码
     }
   }
+
+  depends_on = [ 
+    aws_lb.main,
+    aws_lb_target_group.frontend_tg
+  ] 
+
 }
 
 ### Load Balancer 配置结束 ###
