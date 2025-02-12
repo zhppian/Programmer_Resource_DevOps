@@ -80,8 +80,8 @@ resource "aws_ecs_task_definition" "program_resource" {
   ])
 
   requires_compatibilities = ["FARGATE"]
-  cpu                      = "1024"
-  memory                   = "2048"
+  cpu                      = "512"
+  memory                   = "1024"
   execution_role_arn       = data.aws_iam_role.ecs_task_execution_role.arn
 }
 
@@ -121,14 +121,14 @@ resource "aws_lb_target_group" "frontend_tg" {
   vpc_id      = data.aws_vpc.default.id
   target_type = "ip" # ECS 使用 IP 模式
 
-  health_check {
-    path                = "/health" # Update this to a valid route
-    interval            = 30
-    timeout             = 5
-    healthy_threshold   = 5
-    unhealthy_threshold = 2
-    matcher             = "200-299"
-  }
+  # health_check {
+  #   path                = "/health" # Update this to a valid route
+  #   interval            = 30
+  #   timeout             = 5
+  #   healthy_threshold   = 5
+  #   unhealthy_threshold = 5
+  #   matcher             = "200-299"
+  # }
 
 }
 
@@ -140,14 +140,14 @@ resource "aws_lb_target_group" "backend_tg" {
   vpc_id      = data.aws_vpc.default.id
   target_type = "ip" # ECS 使用 IP 模式
 
-  health_check {
-    path                = "/health" # Update this to a valid route
-    interval            = 30
-    timeout             = 5
-    healthy_threshold   = 5
-    unhealthy_threshold = 2
-    matcher             = "200-299"
-  }
+  # health_check {
+  #   path                = "/health" # Update this to a valid route
+  #   interval            = 30
+  #   timeout             = 5
+  #   healthy_threshold   = 5
+  #   unhealthy_threshold = 5
+  #   matcher             = "200-299"
+  # }
 }
 
 resource "aws_lb_target_group" "backend_tg_5002" {
@@ -157,14 +157,14 @@ resource "aws_lb_target_group" "backend_tg_5002" {
   vpc_id      = data.aws_vpc.default.id
   target_type = "ip" 
 
-  health_check {
-    path                = "/health" # Update this to a valid route
-    interval            = 30
-    timeout             = 5
-    healthy_threshold   = 5
-    unhealthy_threshold = 2
-    matcher             = "200-299"
-  }
+  # health_check {
+  #   path                = "/health" # Update this to a valid route
+  #   interval            = 30
+  #   timeout             = 5
+  #   healthy_threshold   = 5
+  #   unhealthy_threshold = 5
+  #   matcher             = "200-299"
+  # }
 }
 
 
@@ -218,35 +218,6 @@ resource "aws_lb_listener" "frontend_https_listener" {
   }
 
 }
-
-# # 创建 HTTPS Listener (Backend)
-# resource "aws_lb_listener" "backend_https_listener" {
-#   load_balancer_arn = aws_lb.main.arn
-#   port              = 5001
-#   protocol          = "HTTPS"
-#   ssl_policy        = "ELBSecurityPolicy-2016-08"  # 可根据需要选择 SSL 策略
-#   certificate_arn   = "arn:aws:acm:ap-northeast-3:886436941040:certificate/03ea08ec-55cb-49f2-81f9-5105b1b75420" # 替换为实际 ACM 证书 ARN
-
-#   default_action {
-#     type             = "forward"
-#     target_group_arn = aws_lb_target_group.backend_tg.arn
-#   }
-
-# }
-
-# resource "aws_lb_listener" "backend_5002_https_listener" {
-#   load_balancer_arn = aws_lb.main.arn
-#   port              = 5002
-#   protocol          = "HTTPS"
-#   ssl_policy        = "ELBSecurityPolicy-2016-08"  # 可根据需要选择 SSL 策略
-#   certificate_arn   = "arn:aws:acm:ap-northeast-3:886436941040:certificate/03ea08ec-55cb-49f2-81f9-5105b1b75420" # 替换为实际 ACM 证书 ARN
-
-#   default_action {
-#     type             = "forward"
-#     target_group_arn = aws_lb_target_group.backend_tg_5002.arn
-#   }
-
-# }
 
 # 创建 Listener (Frontend)
 resource "aws_lb_listener" "frontend_listener" {
@@ -327,7 +298,8 @@ resource "aws_ecs_service" "main" {
   depends_on = [
     aws_lb_listener.frontend_listener,
     aws_lb_listener.backend_listener,
-    aws_lb_listener.backend_listener_5002
+    aws_lb_listener.backend_listener_5002,
+    aws_lb_listener.frontend_https_listener
   ]
 
 }
