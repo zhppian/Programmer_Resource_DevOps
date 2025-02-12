@@ -36,7 +36,7 @@ resource "aws_ecs_task_definition" "program_resource" {
       portMappings = [
         {
           containerPort = 80
-          hostPort      = 80
+          # hostPort      = 80
         }
       ]
       environment = [
@@ -60,24 +60,23 @@ resource "aws_ecs_task_definition" "program_resource" {
       portMappings = [
         {
           containerPort = 5001
-          hostPort      = 5001
+          # hostPort      = 5001
+        }
+      ]
+    },
+    {
+      name      = "backend-container-5002"
+      image     = "886436941040.dkr.ecr.ap-northeast-3.amazonaws.com/program_resource_backend_5002:latest"
+      cpu       = 512
+      memory    = 1024
+      essential = true
+      portMappings = [
+        {
+          containerPort = 5002
+          # hostPort      = 5002
         }
       ]
     }
-    # ,
-    # {
-    #   name      = "backend-container-5002"
-    #   image     = "886436941040.dkr.ecr.ap-northeast-3.amazonaws.com/program_resource_backend_5002:latest"
-    #   cpu       = 512
-    #   memory    = 1024
-    #   essential = true
-    #   portMappings = [
-    #     {
-    #       containerPort = 5002
-    #       hostPort      = 5002
-    #     }
-    #   ]
-    # }
   ])
 
   requires_compatibilities = ["FARGATE"]
@@ -151,22 +150,22 @@ resource "aws_lb_target_group" "backend_tg" {
   # }
 }
 
-# resource "aws_lb_target_group" "backend_tg_5002" {
-#   name        = "backend-target-group-5002"
-#   port        = 5002
-#   protocol    = "HTTP"
-#   vpc_id      = data.aws_vpc.default.id
-#   target_type = "ip" 
+resource "aws_lb_target_group" "backend_tg_5002" {
+  name        = "backend-target-group-5002"
+  port        = 5002
+  protocol    = "HTTP"
+  vpc_id      = data.aws_vpc.default.id
+  target_type = "ip" 
 
-#   # health_check {
-#   #   path                = "/health" # Update this to a valid route
-#   #   interval            = 30
-#   #   timeout             = 5
-#   #   healthy_threshold   = 5
-#   #   unhealthy_threshold = 5
-#   #   matcher             = "200-299"
-#   # }
-# }
+  # health_check {
+  #   path                = "/health" # Update this to a valid route
+  #   interval            = 30
+  #   timeout             = 5
+  #   healthy_threshold   = 5
+  #   unhealthy_threshold = 5
+  #   matcher             = "200-299"
+  # }
+}
 
 
 
@@ -188,21 +187,21 @@ resource "aws_lb_listener" "backend_listener" {
   ]    
 }
 
-# resource "aws_lb_listener" "backend_listener_5002" {
-#   load_balancer_arn = aws_lb.main.arn
-#   port              = 5002
-#   protocol          = "HTTP"
+resource "aws_lb_listener" "backend_listener_5002" {
+  load_balancer_arn = aws_lb.main.arn
+  port              = 5002
+  protocol          = "HTTP"
 
-#   default_action {
-#     type             = "forward"
-#     target_group_arn = aws_lb_target_group.backend_tg_5002.arn
-#   }
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.backend_tg_5002.arn
+  }
 
-#   depends_on = [ 
-#     aws_lb.main,
-#     aws_lb_target_group.backend_tg_5002
-#   ]  
-# }
+  depends_on = [ 
+    aws_lb.main,
+    aws_lb_target_group.backend_tg_5002
+  ]  
+}
 
 
 # 创建 HTTPS Listener (Frontend)
@@ -289,17 +288,17 @@ resource "aws_ecs_service" "main" {
     container_port   = 5001
   }
 
-  # load_balancer {
-  #   target_group_arn = aws_lb_target_group.backend_tg_5002.arn
-  #   container_name   = "backend-container-5002"
-  #   container_port   = 5002
-  # }
+  load_balancer {
+    target_group_arn = aws_lb_target_group.backend_tg_5002.arn
+    container_name   = "backend-container-5002"
+    container_port   = 5002
+  }
 
   # 确保 ALB 和目标组的 Listener 在 ECS 服务之前创建
   depends_on = [
     aws_lb_listener.frontend_listener,
     aws_lb_listener.backend_listener,
-    # aws_lb_listener.backend_listener_5002,
+    aws_lb_listener.backend_listener_5002,
     aws_lb_listener.frontend_https_listener
   ]
 
