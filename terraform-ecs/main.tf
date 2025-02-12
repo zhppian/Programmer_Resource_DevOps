@@ -67,8 +67,8 @@ resource "aws_ecs_task_definition" "program_resource" {
     {
       name      = "backend-container-5002"
       image     = "886436941040.dkr.ecr.ap-northeast-3.amazonaws.com/program_resource_backend_5002:latest"
-      cpu       = 256
-      memory    = 512
+      cpu       = 512
+      memory    = 1024
       essential = true
       portMappings = [
         {
