@@ -23,6 +23,10 @@ data "aws_iam_role" "ecs_task_execution_role" {
   name = "ecs-task-execution-role"
 }
 
+data "aws_cloudwatch_log_group" "ecs_logs" {
+  name = "ecs"
+}
+
 resource "aws_ecs_task_definition" "program_resource" {
   family                   = "program-resource-tf"
   network_mode             = "awsvpc"
@@ -105,6 +109,14 @@ resource "aws_ecs_task_definition" "backend_5002" {
           containerPort = 5001  # Internally 5001, but will be routed to 5002 by ALB
         }
       ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          awslogs-group         = aws_cloudwatch_log_group.ecs_logs.name
+          awslogs-region        = "ap-northeast-3"
+          awslogs-stream-prefix = "frontend"
+        }
+      }
     }
   ])
 }
