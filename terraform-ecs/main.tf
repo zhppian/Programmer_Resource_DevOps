@@ -46,12 +46,12 @@ resource "aws_ecs_task_definition" "program_resource" {
       environment = [
         {
           name  = "VITE_API_BASE_URL"
-          value = "http://${aws_lb.main.dns_name}:5001"
+          value = "https://${aws_lb.main.dns_name}:442"
           # value = "https://domain:5001"
         },
         {
           name  = "VITE_API_SECOND_URL"
-          value = "http://${aws_lb.main.dns_name}:5002"
+          value = "http://${aws_lb.main.dns_name}:441"
         }
       ]
     },
@@ -112,7 +112,7 @@ resource "aws_ecs_task_definition" "backend_5002" {
       logConfiguration = {
         logDriver = "awslogs"
         options = {
-          awslogs-group         = aws_cloudwatch_log_group.ecs_logs.name
+          awslogs-group         = data.aws_cloudwatch_log_group.ecs_logs.name
           awslogs-region        = "ap-northeast-3"
           awslogs-stream-prefix = "frontend"
         }
@@ -255,6 +255,35 @@ resource "aws_lb_listener" "frontend_https_listener" {
 
 }
 
+# 创建 HTTPS Listener (Backend)
+resource "aws_lb_listener" "backend_https_listener" {
+  load_balancer_arn = aws_lb.main.arn
+  port              = 442
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"  # 可根据需要选择 SSL 策略
+  certificate_arn   = "arn:aws:acm:ap-northeast-3:886436941040:certificate/03ea08ec-55cb-49f2-81f9-5105b1b75420" # 替换为实际 ACM 证书 ARN
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.backend_tg.arn
+  }
+
+}
+
+resource "aws_lb_listener" "backend_5002_https_listener" {
+  load_balancer_arn = aws_lb.main.arn
+  port              = 441
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"  # 可根据需要选择 SSL 策略
+  certificate_arn   = "arn:aws:acm:ap-northeast-3:886436941040:certificate/03ea08ec-55cb-49f2-81f9-5105b1b75420" # 替换为实际 ACM 证书 ARN
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.backend_tg_5002.arn
+  }
+
+}
+
 # 创建 Listener (Frontend)
 resource "aws_lb_listener" "frontend_listener" {
   load_balancer_arn = aws_lb.main.arn  # 关联的 ALB ARN
@@ -334,7 +363,7 @@ resource "aws_ecs_service" "main" {
   depends_on = [
     aws_lb_listener.frontend_listener,
     aws_lb_listener.backend_listener,
-    # aws_lb_listener.backend_listener_5002,
+    aws_lb_listener.backend_https_listener,
     aws_lb_listener.frontend_https_listener
   ]
 
@@ -359,5 +388,8 @@ resource "aws_ecs_service" "backend_service_5002" {
     container_port   = 5001  # Internally still 5001
   }
 
-  depends_on = [aws_lb_listener.backend_listener_5002]
+  depends_on = [
+    aws_lb_listener.backend_listener_5002,
+    aws_lb_listener.backend_5002_https_listener
+    ]
 }
