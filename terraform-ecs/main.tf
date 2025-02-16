@@ -63,26 +63,50 @@ resource "aws_ecs_task_definition" "program_resource" {
           # hostPort      = 5001
         }
       ]
-    },
-    {
-      name      = "backend-container-5002"
-      image     = "886436941040.dkr.ecr.ap-northeast-3.amazonaws.com/program_resource_backend_5002:latest"
-      cpu       = 512
-      memory    = 1024
-      essential = true
-      portMappings = [
-        {
-          containerPort = 5001
-          # hostPort      = 5002
-        }
-      ]
     }
+    # ,
+    # {
+    #   name      = "backend-container-5002"
+    #   image     = "886436941040.dkr.ecr.ap-northeast-3.amazonaws.com/program_resource_backend_5002:latest"
+    #   cpu       = 256
+    #   memory    = 512
+    #   essential = true
+    #   portMappings = [
+    #     {
+    #       containerPort = 5002  # Internally 5001, but will be routed to 5002 by ALB
+    #     }
+    #   ]
+    # }
   ])
 
   requires_compatibilities = ["FARGATE"]
   cpu                      = "1024"
   memory                   = "3072"
   execution_role_arn       = data.aws_iam_role.ecs_task_execution_role.arn
+}
+
+resource "aws_ecs_task_definition" "backend_5002" {
+  family                   = "program-resource-backend-5002"
+  network_mode             = "awsvpc"
+  requires_compatibilities = ["FARGATE"]
+  cpu                      = "512"
+  memory                   = "1024"
+  execution_role_arn       = data.aws_iam_role.ecs_task_execution_role.arn
+
+  container_definitions = jsonencode([
+    {
+      name      = "backend-container-5002"
+      image     = "886436941040.dkr.ecr.ap-northeast-3.amazonaws.com/program_resource_backend_5002:latest"
+      cpu       = 256
+      memory    = 512
+      essential = true
+      portMappings = [
+        {
+          containerPort = 5001  # Internally 5001, but will be routed to 5002 by ALB
+        }
+      ]
+    }
+  ])
 }
 
 data "aws_vpc" "default" {
@@ -288,18 +312,40 @@ resource "aws_ecs_service" "main" {
     container_port   = 5001
   }
 
-  load_balancer {
-    target_group_arn = aws_lb_target_group.backend_tg_5002.arn
-    container_name   = "backend-container-5002"
-    container_port   = 5002
-  }
+  # load_balancer {
+  #   target_group_arn = aws_lb_target_group.backend_tg_5002.arn
+  #   container_name   = "backend-container-5002"
+  #   container_port   = 5002
+  # }
 
   # 确保 ALB 和目标组的 Listener 在 ECS 服务之前创建
   depends_on = [
     aws_lb_listener.frontend_listener,
     aws_lb_listener.backend_listener,
-    aws_lb_listener.backend_listener_5002,
+    # aws_lb_listener.backend_listener_5002,
     aws_lb_listener.frontend_https_listener
   ]
 
+}
+
+resource "aws_ecs_service" "backend_service_5002" {
+  name            = "backend-service-5002"
+  cluster         = aws_ecs_cluster.main.id
+  task_definition = aws_ecs_task_definition.backend_5002.arn
+  desired_count   = 1
+  launch_type     = "FARGATE"
+
+  network_configuration {
+    subnets          = data.aws_subnets.default.ids
+    security_groups  = [data.aws_security_group.http.id]
+    assign_public_ip = true
+  }
+
+  load_balancer {
+    target_group_arn = aws_lb_target_group.backend_tg_5002.arn
+    container_name   = "backend-container-5002"
+    container_port   = 5001  # Internally still 5001
+  }
+
+  depends_on = [aws_lb_listener.backend_listener_5002]
 }
