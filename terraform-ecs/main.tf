@@ -73,7 +73,7 @@ resource "aws_ecs_task_definition" "program_resource" {
       portMappings = [
         {
           containerPort = 5001
-          hostPort      = 5002
+          # hostPort      = 5002
         }
       ]
     }
