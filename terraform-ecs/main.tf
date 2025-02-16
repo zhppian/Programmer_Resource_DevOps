@@ -72,8 +72,8 @@ resource "aws_ecs_task_definition" "program_resource" {
       essential = true
       portMappings = [
         {
-          containerPort = 5002
-          # hostPort      = 5002
+          containerPort = 5001
+          hostPort      = 5002
         }
       ]
     }
