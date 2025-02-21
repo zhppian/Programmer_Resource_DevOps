@@ -114,7 +114,7 @@ resource "aws_ecs_task_definition" "backend_5002" {
         options = {
           awslogs-group         = data.aws_cloudwatch_log_group.ecs_logs.name
           awslogs-region        = "ap-northeast-3"
-          awslogs-stream-prefix = "frontend"
+          awslogs-stream-prefix = "backend-jobmarket"
         }
       }
     }
