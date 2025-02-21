@@ -188,7 +188,8 @@ resource "aws_lb_target_group" "backend_tg" {
 
 resource "aws_lb_target_group" "backend_tg_5002" {
   name        = "backend-target-group-5002"
-  port        = 5002
+  # port        = 5002
+  port        = 5001
   protocol    = "HTTP"
   vpc_id      = data.aws_vpc.default.id
   target_type = "ip" 
