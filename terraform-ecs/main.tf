@@ -51,7 +51,7 @@ resource "aws_ecs_task_definition" "program_resource" {
         },
         {
           name  = "VITE_API_SECOND_URL"
-          value = "http://${aws_lb.main.dns_name}:441"
+          value = "https://${aws_lb.main.dns_name}:441"
         }
       ]
     },
