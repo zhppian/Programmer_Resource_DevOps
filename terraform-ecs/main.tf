@@ -256,7 +256,7 @@ resource "aws_lb_listener" "backend_listener_5002" {
   ]  
 }
 
-resource "aws_lb_listener" "frontend_http_listener" {
+resource "aws_lb_listener" "frontend_listener" {
   load_balancer_arn = aws_lb.main.arn
   port              = 5173
   protocol          = "HTTP"
@@ -318,7 +318,7 @@ resource "aws_lb_listener" "backend_5002_https_listener" {
 }
 
 # 创建 Listener (Frontend)
-resource "aws_lb_listener" "frontend_listener" {
+resource "aws_lb_listener" "http_to_https" {
   load_balancer_arn = aws_lb.main.arn  # 关联的 ALB ARN
   port              = 80  # HTTP 80 端口
   protocol          = "HTTP"  # 协议为 HTTP
@@ -394,8 +394,8 @@ resource "aws_ecs_service" "main" {
 
   # 确保 ALB 和目标组的 Listener 在 ECS 服务之前创建
   depends_on = [
-    aws_lb_listener.frontend_http_listener,
     aws_lb_listener.frontend_listener,
+    aws_lb_listener.http_to_https,
     aws_lb_listener.backend_listener,
     aws_lb_listener.backend_https_listener,
     aws_lb_listener.frontend_https_listener
