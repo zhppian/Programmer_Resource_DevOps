@@ -241,41 +241,20 @@ resource "aws_lb_listener" "backend_listener" {
   ]    
 }
 
-# resource "aws_lb_listener" "backend_listener_5002" {
-#   load_balancer_arn = aws_lb.main.arn
-#   port              = 5002
-#   protocol          = "HTTP"
-
-#   default_action {
-#     type             = "forward"
-#     target_group_arn = aws_lb_target_group.backend_tg_5002.arn
-#   }
-
-#   depends_on = [ 
-#     aws_lb.main,
-#     aws_lb_target_group.backend_tg_5002
-#   ]  
-# }
-
-#test
 resource "aws_lb_listener" "backend_listener_5002" {
-  load_balancer_arn = aws_lb.main.arn  # 关联的 ALB ARN
-  port              = 5002  # HTTP 80 端口
-  protocol          = "HTTP"  # 协议为 HTTP
+  load_balancer_arn = aws_lb.main.arn
+  port              = 5002
+  protocol          = "HTTP"
+
   default_action {
-    type = "redirect"  # 重定向
-    redirect {
-      port        = "441"  # 重定向到 HTTPS 443
-      protocol    = "HTTPS"  # 使用 HTTPS 协议
-      status_code = "HTTP_301"  # 重定向状态码
-    }
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.backend_tg_5002.arn
   }
 
   depends_on = [ 
     aws_lb.main,
     aws_lb_target_group.backend_tg_5002
-  ] 
-
+  ]  
 }
 
 resource "aws_lb_listener" "frontend_listener" {
