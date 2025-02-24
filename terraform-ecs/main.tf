@@ -43,6 +43,14 @@ resource "aws_ecs_task_definition" "program_resource" {
           # hostPort      = 80
         }
       ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          awslogs-group         = data.aws_cloudwatch_log_group.ecs_logs.name
+          awslogs-region        = "ap-northeast-3"
+          awslogs-stream-prefix = "frontend"
+        }
+      }
       environment = [
         {
           name  = "VITE_API_BASE_URL"
@@ -67,6 +75,14 @@ resource "aws_ecs_task_definition" "program_resource" {
           # hostPort      = 5001
         }
       ]
+      logConfiguration = {
+        logDriver = "awslogs"
+        options = {
+          awslogs-group         = data.aws_cloudwatch_log_group.ecs_logs.name
+          awslogs-region        = "ap-northeast-3"
+          awslogs-stream-prefix = "backend"
+        }
+      }      
     }
     # ,
     # {
