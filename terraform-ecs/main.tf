@@ -39,7 +39,7 @@ resource "aws_ecs_task_definition" "program_resource" {
       essential = true
       portMappings = [
         {
-          containerPort = 80
+          containerPort = 5173
           # hostPort      = 80
         }
       ]
@@ -168,7 +168,7 @@ resource "aws_lb" "main" {
 # 创建 ALB 的目标组 (Frontend)
 resource "aws_lb_target_group" "frontend_tg" {
   name        = "frontend-target-group"
-  port        = 80
+  port        = 5173
   protocol    = "HTTP"
   vpc_id      = data.aws_vpc.default.id
   target_type = "ip" # ECS 使用 IP 模式
@@ -253,6 +253,22 @@ resource "aws_lb_listener" "backend_listener_5002" {
   depends_on = [ 
     aws_lb.main,
     aws_lb_target_group.backend_tg_5002
+  ]  
+}
+
+resource "aws_lb_listener" "frontend_http_listener" {
+  load_balancer_arn = aws_lb.main.arn
+  port              = 5173
+  protocol          = "HTTP"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.frontend_tg.arn
+  }
+
+  depends_on = [ 
+    aws_lb.main,
+    aws_lb_target_group.frontend_tg
   ]  
 }
 
@@ -361,7 +377,7 @@ resource "aws_ecs_service" "main" {
   load_balancer {
     target_group_arn = aws_lb_target_group.frontend_tg.arn
     container_name   = "frontend-container"
-    container_port   = 80
+    container_port   = 5173
   }
 
   load_balancer {
@@ -378,6 +394,7 @@ resource "aws_ecs_service" "main" {
 
   # 确保 ALB 和目标组的 Listener 在 ECS 服务之前创建
   depends_on = [
+    aws_lb_listener.frontend_http_listener,
     aws_lb_listener.frontend_listener,
     aws_lb_listener.backend_listener,
     aws_lb_listener.backend_https_listener,
