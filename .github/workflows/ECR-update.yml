@@ -1,4 +1,4 @@
-name: Redeploy Frontend
+name: Redeploy ECR
 
 on:
   workflow_dispatch:  # Allows you to manually trigger this workflow
