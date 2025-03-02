@@ -15,7 +15,7 @@ variable "app_name" {
 variable "account_id" {
   description = "AWS account ID"
   type        = string
-  default     = "886436941040"
+  default     = ""
 }
 
 variable "domain_name" {
@@ -27,7 +27,7 @@ variable "domain_name" {
 variable "certificate_arn" {
   description = "ARN of the SSL certificate"
   type        = string
-  default     = "arn:aws:acm:ap-northeast-3:886436941040:certificate/03ea08ec-55cb-49f2-81f9-5105b1b75420"
+  default     = ""
 }
 
 variable "frontend_port" {
