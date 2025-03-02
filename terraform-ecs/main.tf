@@ -13,62 +13,6 @@ provider "aws" {
   region = var.region
 }
 
-# Create ECR repositories
-resource "aws_ecr_repository" "frontend" {
-  name                 = "${var.app_name}_frontend"
-  image_tag_mutability = "MUTABLE"
-  tags                 = var.common_tags
-
-  image_scanning_configuration {
-    scan_on_push = true
-  }
-}
-
-resource "aws_ecr_repository" "backend" {
-  name                 = "${var.app_name}_backend"
-  image_tag_mutability = "MUTABLE"
-  tags                 = var.common_tags
-
-  image_scanning_configuration {
-    scan_on_push = true
-  }
-}
-
-resource "aws_ecr_repository" "backend_5002" {
-  name                 = "${var.app_name}_backend_5002"
-  image_tag_mutability = "MUTABLE"
-  tags                 = var.common_tags
-
-  image_scanning_configuration {
-    scan_on_push = true
-  }
-}
-
-# ECR repository lifecycle policy - keep only the last 5 images
-resource "aws_ecr_lifecycle_policy" "ecr_policy" {
-  for_each   = {
-    frontend = aws_ecr_repository.frontend.name
-    backend  = aws_ecr_repository.backend.name
-    backend_5002 = aws_ecr_repository.backend_5002.name
-  }
-  repository = each.value
-
-  policy = jsonencode({
-    rules = [{
-      rulePriority = 1
-      description  = "Keep only the last 5 images"
-      selection = {
-        tagStatus   = "any"
-        countType   = "imageCountMoreThan"
-        countNumber = 5
-      }
-      action = {
-        type = "expire"
-      }
-    }]
-  })
-}
-
 # Create IAM role for ECS task execution
 resource "aws_iam_role" "ecs_task_execution_role" {
   name = "ecs-task-execution-role-var"
@@ -117,7 +61,7 @@ resource "aws_ecs_task_definition" "program_resource" {
   container_definitions    = jsonencode([
     {
       name      = "frontend-container"
-      image     = "${aws_ecr_repository.frontend.repository_url}:latest"
+      image     = "${var.account_id}.dkr.ecr.${var.region}.amazonaws.com/${var.app_name}-frontend:latest"
       cpu       = var.container_cpu
       memory    = var.container_memory
       essential = true
@@ -147,7 +91,7 @@ resource "aws_ecs_task_definition" "program_resource" {
     },
     {
       name      = "backend-container"
-      image     = "${aws_ecr_repository.backend.repository_url}:latest"
+      image     = "${var.account_id}.dkr.ecr.${var.region}.amazonaws.com/${var.app_name}-backend:latest"
       cpu       = var.container_cpu
       memory    = var.container_memory
       essential = true
@@ -187,7 +131,7 @@ resource "aws_ecs_task_definition" "backend_5002" {
   container_definitions = jsonencode([
     {
       name      = "backend-container-5002"
-      image     = "${aws_ecr_repository.backend_5002.repository_url}:latest"
+      image     = "${var.account_id}.dkr.ecr.${var.region}.amazonaws.com/${var.app_name}-backend-5002:latest"
       cpu       = var.container_cpu
       memory    = var.container_memory
       essential = true
@@ -576,19 +520,4 @@ output "domain_name" {
 output "nameservers" {
   description = "The nameservers for the Route53 zone"
   value       = aws_route53_zone.program_resource_hub.name_servers
-}
-
-output "frontend_ecr_repository_url" {
-  description = "The URL of the frontend ECR repository"
-  value       = aws_ecr_repository.frontend.repository_url
-}
-
-output "backend_ecr_repository_url" {
-  description = "The URL of the backend ECR repository"
-  value       = aws_ecr_repository.backend.repository_url
-}
-
-output "backend_5002_ecr_repository_url" {
-  description = "The URL of the backend 5002 ECR repository"
-  value       = aws_ecr_repository.backend_5002.repository_url
 }
