@@ -25,6 +25,6 @@ jobs:
       run: |
           aws ecs update-service --cluster program-resource-tf --service program-resource-tf --force-new-deployment > /dev/null 2>&1
 
-    - name: Redeploy Backend-5002
-      run: |
-          aws ecs update-service --cluster program-resource-tf --service backend-service-5002 --force-new-deployment > /dev/null 2>&1
+    # - name: Redeploy Backend-5002
+    #   run: |
+    #       aws ecs update-service --cluster program-resource-tf --service backend-service-5002 --force-new-deployment > /dev/null 2>&1
