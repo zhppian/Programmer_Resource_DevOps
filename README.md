@@ -1,59 +1,79 @@
-# Terraform AWS ECS Deployment
+# AWS Infrastructure with Terraform
 
-This project provisions a complete AWS infrastructure using Terraform to deploy a containerized application with a frontend and two backend services using ECS Fargate. It includes ECR repositories, ECS task definitions, security groups, load balancers, and IAM roles.
+This project uses Terraform to deploy and manage AWS infrastructure, including ECS, ECR, and related services. It also includes GitHub Actions for automated deployment and management.
 
-## Features
+## Project Structure
 
-- **State Management:** Terraform state stored in S3 with encryption enabled.
-- **ECR Repositories:** Frontend, backend, and backend (port 5002) repositories with image scanning and lifecycle policies.
-- **IAM Roles:** ECS task execution role with policies for ECS and S3 access.
-- **ECS Cluster & Tasks:** Fargate tasks for frontend and backend services with log configuration for CloudWatch.
-- **Networking:** Security groups for HTTP/HTTPS access, subnets, and default VPC configuration.
-- **Load Balancer:** Application Load Balancer with target groups and health checks.
+- **/terraform-ecs**: Contains Terraform configuration files for infrastructure setup.
+- **/.github/workflows**: Contains GitHub Actions workflows for automated CI/CD.
 
-## Infrastructure Overview
+## GitHub Actions Workflows
 
-- **Terraform Backend:** S3 bucket for state storage
-- **Providers:** AWS
-- **Resource Types:** ECR, ECS, IAM, VPC, Security Groups, ALB
+This project includes several GitHub Actions workflows to manage the infrastructure:
 
-## Usage
+1. **ECS-apply.yml**: Runs `terraform apply` to deploy or update the infrastructure.
+2. **ECS-destroy.yml**: Runs `terraform destroy` to tear down the infrastructure.
+3. **ECR-update.yml**: Redeploys ECS service with the updated ECR image, without reapplying all AWS resources.
 
-1. **Initialize Terraform:**
+## How to Use
 
+### Setup
+
+1. Clone the repository:
    ```bash
+   git clone <repository_url>
+   cd <repository_name>
+   ```
+
+2. Configure AWS credentials as repository secrets in GitHub.
+
+3. Initialize Terraform:
+   ```bash
+   cd terraform-ecs
    terraform init
    ```
 
-2. **Plan Deployment:**
+### Deploy Infrastructure
 
-   ```bash
-   terraform plan
-   ```
+Run the `ECS-apply.yml` workflow to apply Terraform changes:
 
-3. **Apply Changes:**
+- Navigate to the Actions tab in your GitHub repository.
+- Select **ECS-apply** and click **Run workflow**.
 
+### Destroy Infrastructure
+
+Run the `ECS-destroy.yml` workflow to tear down the infrastructure:
+
+- Navigate to the Actions tab.
+- Select **ECS-destroy** and click **Run workflow**.
+
+### Redeploy Updated ECR Image
+
+If you update the Docker image in ECR, run the `ECR-update.yml` workflow:
+
+- This updates ECS to use the latest image without affecting other AWS resources.
+- Navigate to the Actions tab.
+- Select **ECR-update** and click **Run workflow**.
+
+## Terraform Commands
+
+Manually apply or destroy infrastructure if needed:
+
+- Apply changes:
    ```bash
    terraform apply
    ```
 
-4. **Destroy Resources:**
-
+- Destroy infrastructure:
    ```bash
    terraform destroy
    ```
 
-## Variables
+## Best Practices
 
-- `app_name`: Application name prefix
-- `region`: AWS region
-- `container_cpu`: CPU units for ECS containers
-- `container_memory`: Memory for ECS containers
-- `frontend_port`, `backend_port`, `backend_second_port`: Service ports
+- Use environment-specific Terraform workspaces.
+- Review changes with `terraform plan` before applying.
+- Monitor ECS service logs for troubleshooting.
 
-## Author
-
-This infrastructure was built and managed by me, leveraging Terraform and AWS services to create a scalable, secure, and highly available application environment.
-
-Would you like me to refine this, add diagrams, or tailor it more to highlight your strengths? Let me know! 🚀
+Let me know if you’d like me to refine this further or add more details! 🚀
 
