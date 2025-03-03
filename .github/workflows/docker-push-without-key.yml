@@ -1,0 +1,38 @@
+name: ecr push image
+on:
+  workflow_dispatch:
+    inputs:
+      workspace:
+        description: 'ECR push'
+        required: false
+        default: 'default'
+       
+# on:
+#   push:  
+    
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-region: ap-northeast-3
+          role-to-assume: arn:aws:iam::886436941040:role/github-actions-ecr-push-example-role
+
+      - uses: aws-actions/amazon-ecr-login@v1
+        id: login-ecr 
+      - name: build and push docker image to ecr
+        env:
+          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          REPOSITORY: program-resource_frontend
+          IMAGE_TAG: latest
+        run: |
+          cd road_to_programmer
+          docker build . --tag ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:${{ env.IMAGE_TAG }}
+          docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY }}:${{ env.IMAGE_TAG }}
+          
